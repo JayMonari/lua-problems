@@ -1,23 +1,25 @@
-local VOWEL_START = "^[aeiou]"
-local CONSONANT_START = "^([BCDFGHJKLMNPQRSTUVWXYZbcdfghjklmnpqrstuvwxyz]+)([aeiou].*)$"
-
-local function hasprefix(str, target)
-  local prefix = str:sub(1, #target)
-  return prefix == target
+local function translate(word)
+  local rule1 = { "a", "e", "i", "o", "u", "yt", "xr" }
+  local rule2 = { "[^aeiou]qu", "thr", "sch" }
+  local rule3 = { "ch", "qu", "th" }
+  local ending = "ay"
+  local function begins_with_any_of(patterns)
+    for _, pattern in ipairs(patterns) do
+      if word:lower():find("^" .. pattern) then return true end
+    end
+  end
+  if begins_with_any_of(rule1) then
+    return word .. ending
+  elseif begins_with_any_of(rule2) then
+    return word:sub(4) .. word:sub(1, 3) .. ending
+  elseif begins_with_any_of(rule3) then
+    return word:sub(3) .. word:sub(1, 2) .. ending
+  else
+    -- rule4
+    return word:sub(2) .. word:sub(1, 1) .. ending
+  end
 end
 
 return function(phrase)
-  local pig_latin = {}
-  for word in phrase:gmatch '[^ ]+' do
-    if word:find(VOWEL_START) ~= nil or
-      hasprefix(word, "xr") or hasprefix(word, "yt") then
-      table.insert(pig_latin, word .. "ay")
-    else
-      local gr1, gr2 = word:match(CONSONANT_START)
-      if gr1 then
-        table.insert(pig_latin, gr2 .. gr1 .. "ay")
-      end
-    end
-  end
-  return table.concat(pig_latin, ' ')
+  return phrase:gsub("%a+", translate)
 end
